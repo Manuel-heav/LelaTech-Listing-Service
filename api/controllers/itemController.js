@@ -19,8 +19,17 @@ const addItem = async (req, res, next) => {
 
 const editItem = async (req, res, next) => {
     try {
-        const item = await Item.findByIdAndUpdate(req.params)
-        res.send(item);
+        const itemId = req.params.id;
+
+        const item = await Item.findOne({ _id: itemId });
+
+        if (!item) {
+            return res.status(404).send("Event not found");
+        }
+
+        item.set(req.body);
+        const updatedItem = await item.save();
+        res.send(updatedItem);
     } catch (err) {
         next(err);
     }
@@ -29,13 +38,34 @@ const editItem = async (req, res, next) => {
 // get all items
 
 const getItems = async (req, res, next) => {
-    try {
-        const items = await Item.find();
-        res.send(items);
-    } catch (err) {
-        next(err);
-    }
+ 
+const page = parseInt(req.query.page) || 1;
+const limit = parseInt(req.query.limit) || 10;
+
+const skip = (page - 1) * limit;
+
+try {
+
+    // res.send(items);
+    const items = await Item.find()
+        .skip(skip)
+        .limit(limit);
+
+    const total = await Item.countDocuments();
+
+    res.status(200).json({
+        total,
+        page,
+        totalPages: Math.ceil(total / limit),
+        limit,
+        prevPage: page > 1 ? page - 1 : null,
+        nextPage: total > page * limit ? page + 1 : null,
+        data: items
+    });
+} catch (error) {
+    res.status(500).json({ message: error.message });
 }
+};
 
 // delete an item
 
