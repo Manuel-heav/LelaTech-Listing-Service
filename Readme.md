@@ -1,4 +1,4 @@
-we deployed our api
+API:
 
-for item listing 
+for item listing: 
 https://lelatech-listing-service.onrender.com/api/item
